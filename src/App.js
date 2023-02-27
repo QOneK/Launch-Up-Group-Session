@@ -6,6 +6,31 @@ import Board from "./components/Board";
 function App() {
   //checkers returns initial state
   const [checkers, setCheckers] = useState(initializeBoard())
+  const [turn, setTurn] = useState(false) 
+
+  
+  function legalMove(){
+    
+  }
+
+  function nonSelectedDeactivate(i, j){
+    let color 
+    if(turn) {
+      color = "red"
+    } else {
+      color = "black"
+    }
+
+    for (let r=0; r < 8; r++){
+      for(let c=0; c<8; c++) {
+        const isCurrentActive = r === i && j === c;
+        const isSameColorAsCurrentActive = checkers[r][c]["color"] === color;
+        if (isSameColorAsCurrentActive && !isCurrentActive){
+          checkers[r][c]["isActive"]=false
+        } 
+      }
+    }
+  }
 
   /*
   {
@@ -15,9 +40,45 @@ function App() {
   }
   */
 
+    /*
+  Rule: 
+
+  *Turn*
+  Red => True   ;    Black => False
+
+  a) click a piece, click another piece (on same side), everything goes blank except for the selected piece
+  b) if legal: move is made, unselect all the yellow borders and move the piece to the valid spot 
+  c) if illegal: do nothing
+  d) if click yellow border actived: unactive the border
+  e) only one selected piece at a time
+  */
+ 
   function checkerClick(i, j) {
+    // On the second click where you want to move it to...
+    // Do you want to loop through current board and find previous
+    // active object INDEX and also use curren i,j of current empty
+    // cell... and them ove like that?
+    // OR
+    // Do you want to have useState of current Active.. and just use that.
+    let previousRow;
+    let previousColumn;
+    
+    for (let k = 0 ; k < 8 ; k++){
+      for (let l = 0 ; l < 8 ; l++){
+        if (checkers[k][l]["isActive"]){
+          previousRow = k
+          previousColumn = l
+        }
+      }
+    }
+
+    //next objective: move the piece into a legal place, 
+  // after that set off a validation if the move was legal or not
+
+    
     let tempArr = [...checkers]
-    tempArr[i][j].isActive = true
+    nonSelectedDeactivate(i, j)
+    tempArr[i][j].isActive = !tempArr[i][j].isActive
     setCheckers(tempArr)
   }
 
@@ -38,12 +99,6 @@ function App() {
     pushPieces("black", checkers);
 
     function pushPieces(color, checkers) {
-      const piece = {
-        color: color,
-        isKing: false,
-        isActive: false
-      }
-
       for (let i = 0; i < 3; i++) {
         let innerArray = [];
         for (let j = 0; j < 8; j++) {
@@ -52,7 +107,7 @@ function App() {
               innerArray.push({
                 color: color,
                 isKing: false,
-                isActive: false
+                isActive: false,
               });
             } else {
               innerArray.push("");
@@ -62,7 +117,7 @@ function App() {
               innerArray.push({
                 color: color,
                 isKing: false,
-                isActive: false
+                isActive: false,
               });
             } else {
               innerArray.push("");
