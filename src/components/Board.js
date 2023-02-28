@@ -4,7 +4,7 @@ function Board({checkers, checkerClick}) {
     let black = "box-border border-[1px] b-2 w-10 h-10 bg-slate-400"
     let white = "box-border border-[1px] b-2 w-10 h-10 bg-grey"
 
-    let activeBorder = "border-yellow-600 border-4"
+    let activeBorder = "border-yellow-600 border-8"
 
 
     function renderDiv(i,j,ele){
