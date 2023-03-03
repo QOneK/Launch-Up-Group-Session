@@ -6,28 +6,7 @@ import Board from "./components/Board";
 function App() {
   //checkers returns initial state
   const [checkers, setCheckers] = useState(initializeBoard());
-  const [turn, setTurn] = useState(false);
-
-  function legalMove() {}
-
-  function nonSelectedDeactivate(i, j) {
-    let color;
-    if (turn) {
-      color = "red";
-    } else {
-      color = "black";
-    }
-
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        const isCurrentActive = r === i && j === c;
-        const isSameColorAsCurrentActive = checkers[r][c]["color"] === color;
-        if (isSameColorAsCurrentActive && !isCurrentActive) {
-          checkers[r][c]["isActive"] = false;
-        }
-      }
-    }
-  }
+  const [turn, setTurn] = useState('black');
 
   /*
   {
@@ -37,50 +16,32 @@ function App() {
   }
   */
 
-  /*
-  Rule: 
-
-  *Turn*
-  Red => True   ;    Black => False
-
-  a) click a piece, click another piece (on same side), everything goes blank except for the selected piece
-  b) if legal: move is made, unselect all the yellow borders and move the piece to the valid spot 
-  c) if illegal: do nothing
-  d) if click yellow border actived: unactive the border
-  e) only one selected piece at a time
-  */
-
   function isIllegalMove(i, j, previousColumn, previousRow) {
-    // 1) Illegal empty space (which should never be placed)
-
-    // To a black space that is not legal
-    // King can move back but normal can't (1.2)
-    // You can't "fly" to another black square
-    // To a opponent checker piece
-    // To your own checker piece
-    // 2) Legal to another black square
-
-    //If there is red/black there
-
-    // 1.1 - White Space
+    const isFirstActiveClick = previousRow === undefined && previousColumn === undefined;
+    if(isFirstActiveClick) {
+      return false
+    }
+   // 1.1 - White Space
     const isBothEven = i % 2 === 0 && j % 2 === 0;
     const isBothOdd = i % 2 !== 0 && j % 2 !== 0;
-    //  return isBothEven || isBothOdd;
+    const isIllegalWhite = isBothEven || isBothOdd;
+    if(isIllegalWhite){
+      return true
+    }
+    //1.2 - can't move to a space with pieces already
+    const hasAPiece = checkers[i][j] !== "";
+    const isOppPiece = checkers[i][j]["color"] !== turn;
+    if(hasAPiece && isOppPiece){
+      return true
+    }
 
-    // 1.2 - Move pieces backwards
+
+    // 1.3 - Move pieces backwards
     // (if king then valid, if NOT king then not valid)
 
     //'checkers' is accessible and works here
     //if black, then value of i cannnot be higher
     //if red, then value of i cannot be lower
-
-    //color
-    let color;
-    if (turn) {
-      color = "red";
-    } else {
-      color = "black";
-    }
 
     function hasDiagonalPieces(previousRow, previousColumn, i, j) {
       let corners = [];
@@ -96,29 +57,39 @@ function App() {
       return corners;
     }
 
-    if (checkers[previousRow][previousColumn]["isKing"] === false) {
-      // 2 more additional illegal moves
-      // cannot move greater than 2 spaces if there is no opposition piece directly diagonal
-      // cannot move greater more than 1 space if there is no opposition piece directly diagonal
-      if (color === "red") {
-        if (i <= previousRow) {
-          return true;
-        }
-        // else if (
-        //   // so if BR or BL is true - unlock 2 row move
-        // ){
-        //   // now that I have the corners - illegal move would be to move >3 and <1
-        // }
-      } else if (color === "black") {
-        if (i >= previousRow) {
-          return true;
-        }
-      }
-    } else if (checkers[previousRow][previousColumn]["isKing"] === true) {
-      //we can do this later
-    }
+    // if (checkers[previousRow][previousColumn]["isKing"] === false) {
+    //   // 2 more additional illegal moves
+    //   // cannot move greater than 2 spaces if there is no opposition piece directly diagonal
+    //   // cannot move greater more than 1 space if there is no opposition piece directly diagonal
+    //   if (color === "red") {
+    //     if (i <= previousRow) {
+    //       // if BL or BR is true, moving 1 space or 3 spaces is illegal
+    //       hasDiagonalPieces(previousRow, previousColumn, i, j)
+    //       console.log('WASUPP:', hasDiagonalPieces)
+    //       const hasBR= hasDiagonalPieces.indexOf("BR")
+    //       const hasBL= hasDiagonalPieces.indexOf("BL")
+    //       if (hasBR !== -1 || hasBL !== -1) {
+            
+    //         if (i ===1 || i>=3){
+    //           return true;
+    //         }
+    //       }
+    //     }
+    //     // else if (
+    //     //   // so if BR or BL is true - unlock 2 row move
+    //     // ){
+    //     //   // now that I have the corners - illegal move would be to move >3 and <1
+    //     // }
+    //   } else if (color === "black") {
+    //     if (i >= previousRow) {
+    //       return true;
+    //     }
+    //   }
+    // } else if (checkers[previousRow][previousColumn]["isKing"] === true) {
+    //   //we can do this later
+    // }
 
-    return;
+    return false;
   }
 
   function checkerClick(i, j) {
@@ -139,46 +110,45 @@ function App() {
       }
     }
 
-    const isFirstActiveClick =
-      previousRow === undefined && previousColumn === undefined;
-    const isNotEmptyCell = tempArr[i][j] !== "";
-
-    if (
-      !isFirstActiveClick &&
-      isIllegalMove(i, j, previousColumn, previousRow)
-    ) {
+    if (isIllegalMove(i, j, previousColumn, previousRow)) {
       return;
     }
 
-    let color;
-    if (turn) {
-      color = "red";
-    } else {
-      color = "black";
-    }
+    selectOrMove(tempArr, i, j, previousRow, previousColumn)
+  }
+
+  function selectOrMove(tempArr, i, j, previousRow, previousColumn) {
+    const isFirstActiveClick = previousRow === undefined && previousColumn === undefined;
+    const wasSamePieceClicked = previousRow === i && previousColumn === j;
 
     if (isFirstActiveClick) {
-      const isLegalPiece = tempArr[i][j]["color"] === color;
-      if (isLegalPiece && isNotEmptyCell) {
+      const isLegalPiece = tempArr[i][j]["color"] === turn;
+      if (isLegalPiece) {
         tempArr[i][j].isActive = !tempArr[i][j].isActive;
-        setCheckers(tempArr);
+        
       } else {
-        console.log("wrong piece. not yours");
+        console.log("Don't select a piece that isn't yours, and don't select an empty checker.");
+        return;
       }
-    } else if (previousRow === i && previousColumn === j) {
+    } else if (wasSamePieceClicked) {
       tempArr[i][j].isActive = !tempArr[i][j].isActive;
-      setCheckers(tempArr);
-      // } else if () {
+    } else if (tempArr[previousRow][previousColumn].color === tempArr[i][j].color) {
+      // click yours, then click another of yours, to change your mind for which piece you want to play
+      tempArr[previousRow][previousColumn]["isActive"] = false
+      tempArr[i][j]["isActive"] = true
     } else {
+      // It's a movement!
       tempArr[i][j] = tempArr[previousRow][previousColumn];
       tempArr[i][j]["isActive"] = false;
       tempArr[previousRow][previousColumn] = "";
-      setTurn(!turn);
-      setCheckers(tempArr);
+      let color = 'red';
+      if(turn === 'red'){
+        color = 'black'
+      }
+      setTurn(color);
     }
+    setCheckers(tempArr);
   }
-
-  // nonSelectedDeactivate(i, j)
 
   function initializeBoard() {
     const checkers = [];
