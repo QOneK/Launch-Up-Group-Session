@@ -6,7 +6,7 @@ import Board from "./components/Board";
 function App() {
   //checkers returns initial state
   const [checkers, setCheckers] = useState(initializeBoard());
-  const [turn, setTurn] = useState('black');
+  const [turn, setTurn] = useState("black");
 
   /*
   {
@@ -16,25 +16,70 @@ function App() {
   }
   */
 
-  function isIllegalMove(i, j, previousColumn, previousRow) {
-    const isFirstActiveClick = previousRow === undefined && previousColumn === undefined;
-    if(isFirstActiveClick) {
-      return false
-    }
-   // 1.1 - White Space
+  function isIllegalMove(i, j, previousColumn, previousRow, tempArr) {
+    // 1.1 - White Space
     const isBothEven = i % 2 === 0 && j % 2 === 0;
     const isBothOdd = i % 2 !== 0 && j % 2 !== 0;
     const isIllegalWhite = isBothEven || isBothOdd;
-    if(isIllegalWhite){
-      return true
+    if (isIllegalWhite) {
+      return true;
     }
     //1.2 - can't move to a space with pieces already
     const hasAPiece = checkers[i][j] !== "";
     const isOppPiece = checkers[i][j]["color"] !== turn;
-    if(hasAPiece && isOppPiece){
-      return true
+    if (hasAPiece && isOppPiece) {
+      return true;
     }
 
+    /*
+    Movement for piece movement 1 space
+    */
+    //declarations
+    const rowDiff = Math.abs(previousRow - i);
+    const columnDiff = Math.abs(previousColumn - i);
+
+    if (rowDiff === 1 && columnDiff === 1) {
+      //empty space is legal move
+      return checkers[i][j] !== "";
+    }
+
+    /*
+    Movement for capturing 1 piece
+    //
+    Will need to redo the code. I was very wrong about it. 
+    The correct code realized would be to have 4 conditons => Red, Black moving left/right
+    So, the piece in question will need to look at the piece diagonally "AND" see if the diagonal box is EMPTY!!!
+    https://miro.com/app/board/uXjVPiwVxD8=/
+    */
+    // if (turn === "red") {
+    //   //left 
+    //   if (
+    //     checkers[i - 1][j + 1]["color"] === "black" ||
+    //     checkers[i - 1][j - 1]["color"] === "black"
+    //   ) {
+    //     //valid move
+    //     return false;
+    //   } else {
+    //     return true;
+    //   }
+    // } else if (turn === "black") {
+    //   if (
+    //     checkers[i - 1][j + 1]["color"] === "red" ||
+    //     checkers[i - 1][j - 1]["color"] === "red"
+    //   ) {
+    //     return false;
+    //   } else {
+    //     return true;
+    //   }
+    // }
+
+
+
+    const isFirstActiveClick =
+      previousRow === undefined && previousColumn === undefined;
+    if (isFirstActiveClick) {
+      return false;
+    }
 
     // 1.3 - Move pieces backwards
     // (if king then valid, if NOT king then not valid)
@@ -43,19 +88,22 @@ function App() {
     //if black, then value of i cannnot be higher
     //if red, then value of i cannot be lower
 
-    function hasDiagonalPieces(previousRow, previousColumn, i, j) {
-      let corners = [];
-      if (checkers[previousRow - 1][previousColumn - 1] !== "") {
-        corners.push("TL");
-      } else if (checkers[previousRow - 1][previousColumn + 1] !== "") {
-        corners.push("TR");
-      } else if (checkers[previousRow + 1][previousColumn - 1] !== "") {
-        corners.push("BL");
-      } else if (checkers[previousRow + 1][previousColumn + 1] !== "") {
-        corners.push("BR");
-      }
-      return corners;
-    }
+    /*
+    Diagonal Pieces collection
+    */
+    // function hasDiagonalPieces(previousRow, previousColumn, i, j) {
+    //   let corners = [];
+    //   if (checkers[previousRow - 1][previousColumn - 1] !== "") {
+    //     corners.push("TL");
+    //   } else if (checkers[previousRow - 1][previousColumn + 1] !== "") {
+    //     corners.push("TR");
+    //   } else if (checkers[previousRow + 1][previousColumn - 1] !== "") {
+    //     corners.push("BL");
+    //   } else if (checkers[previousRow + 1][previousColumn + 1] !== "") {
+    //     corners.push("BR");
+    //   }
+    //   return corners;
+    // }
 
     // if (checkers[previousRow][previousColumn]["isKing"] === false) {
     //   // 2 more additional illegal moves
@@ -69,7 +117,7 @@ function App() {
     //       const hasBR= hasDiagonalPieces.indexOf("BR")
     //       const hasBL= hasDiagonalPieces.indexOf("BL")
     //       if (hasBR !== -1 || hasBL !== -1) {
-            
+
     //         if (i ===1 || i>=3){
     //           return true;
     //         }
@@ -110,40 +158,44 @@ function App() {
       }
     }
 
-    if (isIllegalMove(i, j, previousColumn, previousRow)) {
+    if (isIllegalMove(i, j, previousColumn, previousRow, tempArr)) {
       return;
     }
 
-    selectOrMove(tempArr, i, j, previousRow, previousColumn)
+    selectOrMove(tempArr, i, j, previousRow, previousColumn);
   }
 
   function selectOrMove(tempArr, i, j, previousRow, previousColumn) {
-    const isFirstActiveClick = previousRow === undefined && previousColumn === undefined;
+    const isFirstActiveClick =
+      previousRow === undefined && previousColumn === undefined;
     const wasSamePieceClicked = previousRow === i && previousColumn === j;
 
     if (isFirstActiveClick) {
       const isLegalPiece = tempArr[i][j]["color"] === turn;
       if (isLegalPiece) {
         tempArr[i][j].isActive = !tempArr[i][j].isActive;
-        
       } else {
-        console.log("Don't select a piece that isn't yours, and don't select an empty checker.");
+        console.log(
+          "Don't select a piece that isn't yours, and don't select an empty checker."
+        );
         return;
       }
     } else if (wasSamePieceClicked) {
       tempArr[i][j].isActive = !tempArr[i][j].isActive;
-    } else if (tempArr[previousRow][previousColumn].color === tempArr[i][j].color) {
+    } else if (
+      tempArr[previousRow][previousColumn].color === tempArr[i][j].color
+    ) {
       // click yours, then click another of yours, to change your mind for which piece you want to play
-      tempArr[previousRow][previousColumn]["isActive"] = false
-      tempArr[i][j]["isActive"] = true
+      tempArr[previousRow][previousColumn]["isActive"] = false;
+      tempArr[i][j]["isActive"] = true;
     } else {
       // It's a movement!
       tempArr[i][j] = tempArr[previousRow][previousColumn];
       tempArr[i][j]["isActive"] = false;
       tempArr[previousRow][previousColumn] = "";
-      let color = 'red';
-      if(turn === 'red'){
-        color = 'black'
+      let color = "red";
+      if (turn === "red") {
+        color = "black";
       }
       setTurn(color);
     }
